@@ -1,0 +1,58 @@
+# First target: executable that uses regular software encode loop
+
+# https://cmake.org/cmake/help/latest/command/add_executable.html#command:add_executable
+add_executable(moon
+	main.c
+)
+
+target_compile_options(moon PRIVATE -Wall)
+
+target_compile_definitions(moon PRIVATE
+	DVI_DEFAULT_SERIAL_CONFIG=${DVI_DEFAULT_SERIAL_CONFIG}
+	DVI_VERTICAL_REPEAT=1
+	DVI_N_TMDS_BUFFERS=3
+	DVI_MONOCHROME_TMDS
+)
+
+if(PICO_RP2350)
+    target_compile_definitions(moon PRIVATE
+        PICO_PIO_USE_GPIO_BASE=1
+    )
+endif()
+
+target_link_libraries(moon
+	pico_stdlib
+	libdvi
+)
+
+pico_add_extra_outputs(moon)
+
+
+# Second target (same source): executable that offloads TMDS encode to PIO + DMA
+
+add_executable(moon_pio_encode
+	main.c
+)
+
+target_compile_options(moon_pio_encode PRIVATE -Wall)
+
+target_compile_definitions(moon_pio_encode PRIVATE
+	DVI_DEFAULT_SERIAL_CONFIG=${DVI_DEFAULT_SERIAL_CONFIG}
+	DVI_VERTICAL_REPEAT=1
+	DVI_N_TMDS_BUFFERS=3
+	DVI_MONOCHROME_TMDS
+	USE_PIO_TMDS_ENCODE
+)
+
+if(PICO_RP2350)
+    target_compile_definitions(moon PRIVATE
+        PICO_PIO_USE_GPIO_BASE=1
+    )
+endif()
+
+target_link_libraries(moon_pio_encode
+	pico_stdlib
+	libdvi
+)
+
+pico_add_extra_outputs(moon_pio_encode)
